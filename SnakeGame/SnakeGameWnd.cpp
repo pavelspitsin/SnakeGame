@@ -56,6 +56,8 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 	DWORD lastTime;
 	DWORD currentTime = GetTickCount();
 
+	int sleep_time = 0;
+
     // Main loop:
     while (is_running)
     {
@@ -69,16 +71,19 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 			}
 		}
 
+		lastTime = currentTime;
+		currentTime = GetTickCount();
 
-		if (GetTickCount() > next_game_tick)
+		next_game_tick += SKIP_TICKS;
+
+		game->Update(currentTime - lastTime);
+		game->Draw();
+
+		sleep_time = next_game_tick - GetTickCount();
+
+		if (sleep_time > 0)
 		{
-			lastTime = currentTime;
-			currentTime = GetTickCount();
-
-			game->Update(currentTime - lastTime);
-			game->Draw();
-
-			next_game_tick += SKIP_TICKS;
+			Sleep(sleep_time);
 		}
     }
 
