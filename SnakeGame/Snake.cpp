@@ -12,6 +12,8 @@ Snake::Snake(const Position snakePos, float stepTime, Rotation rotation) :
 	_nextStepTime = 0;
 
 
+	_hBrush = CreateSolidBrush(this->_color);
+
 	Position bodyPosition = _headPosition;
 	BodyPart* prevPart = NULL;
 
@@ -37,6 +39,12 @@ Snake::Snake(const Position snakePos, float stepTime, Rotation rotation) :
 
 Snake::~Snake()
 {
+	if (_hBrush)
+	{
+		DeleteBrush(_hBrush);
+		_hBrush = NULL;
+	}
+
 	BodyPart* tmp;
 
 	while (_nextPart)
@@ -120,8 +128,7 @@ void Snake::Update(const GameInfo* gameInfo, DWORD deltaTime, const Food* food)
 void Snake::Draw(const GameInfo* gameInfo)
 {
 	HGDIOBJ prevBrush = NULL;
-	HBRUSH hBrush = CreateSolidBrush(this->_color);
-	prevBrush = SelectObject(gameInfo->hdc, hBrush);
+	prevBrush = SelectObject(gameInfo->hdc, _hBrush);
 
 	int margin_width = gameInfo->margin_width;
 	int margin_height_top = gameInfo->margin_height_top;
@@ -147,7 +154,6 @@ void Snake::Draw(const GameInfo* gameInfo)
 	}
 
 	SelectObject(gameInfo->hdc, prevBrush);
-	DeleteBrush(hBrush);
 }
 
 

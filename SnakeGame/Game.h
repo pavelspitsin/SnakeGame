@@ -11,19 +11,23 @@ private:
 	Food * _food;
 	Rotation _snakeRotation;
 
-	bool is_running;
-	bool is_game_over;
+	HPEN _hGridPen;
+	HFONT _hLogoFont;
+	HFONT _hScoreFont;
 
-	bool need_spawn_new_food;
+	bool _is_running;
+	bool _is_game_over;
 
-	int score;
+	bool _need_spawn_new_food;
+
+	int _score;
 
 	const GameInfo* _gameInfo;
 
 	void Initialization();
-	void Destroy();
+	void Uninitialization();
 	void Clear();
-	void DrawCells();
+	void DrawGrid();
 	void DrawLogo();
 	void DrawGameOverLogo();
 	void DrawScore();

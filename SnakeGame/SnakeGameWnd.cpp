@@ -49,7 +49,7 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 
 	MSG msg;
 
-	const int FRAMES_PER_SECOND = 60;
+	const int FRAMES_PER_SECOND = 20;
 	const int SKIP_TICKS = 1000 / FRAMES_PER_SECOND;
 	DWORD next_game_tick = GetTickCount();
 

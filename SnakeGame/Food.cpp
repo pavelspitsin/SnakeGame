@@ -6,11 +6,24 @@
 Food::Food()
 {
 	_color = RGB(255, 0, 0);
+	_hBrush = CreateSolidBrush(this->_color);
+	_hPen = CreatePen(PS_SOLID, 1, this->_color);
 }
 
 
 Food::~Food()
 {
+	if (_hBrush)
+	{
+		DeleteBrush(_hBrush);
+		_hBrush = NULL;
+	}
+
+	if (_hPen)
+	{
+		DeleteBrush(_hPen);
+		_hPen = NULL;
+	}
 }
 
 void Food::Update(const GameInfo* gameInfo, bool need_spawn_new_food)
@@ -26,14 +39,12 @@ void Food::Draw(const GameInfo* gameInfo)
 {
 	HGDIOBJ prevBrush = NULL;
 	HGDIOBJ prevPen = NULL;
-	HBRUSH hBrush = CreateSolidBrush(this->_color);
-	HPEN hPen = CreatePen(PS_SOLID, 1, this->_color);
-	prevBrush = SelectObject(gameInfo->hdc, hBrush);
-	prevPen = SelectObject(gameInfo->hdc, hPen);
+	prevBrush = SelectObject(gameInfo->hdc, _hBrush);
+	prevPen = SelectObject(gameInfo->hdc, _hPen);
 
 	int margin_width = gameInfo->margin_width;
 	int margin_height_top = gameInfo->margin_height_top;
-	int margin_height_bottob = gameInfo->margin_height_bottom;
+	int margin_height_bottom = gameInfo->margin_height_bottom;
 	int cell_size = gameInfo->cell_size;
 
 	// Draw head
@@ -44,8 +55,6 @@ void Food::Draw(const GameInfo* gameInfo)
 
 	SelectObject(gameInfo->hdc, prevBrush);
 	SelectObject(gameInfo->hdc, prevPen);
-	DeleteBrush(hPen);
-	DeleteBrush(hBrush);
 }
 
 Position Food::GetPosition() const

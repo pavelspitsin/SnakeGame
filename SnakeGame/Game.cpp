@@ -8,24 +8,80 @@
 
 Game::Game(const GameInfo* gameInfo)
 {
-	need_spawn_new_food = true;
-	is_running = false;
+	_hGridPen = CreatePen(PS_SOLID, 1, RGB(255, 0, 0));
+
+	_hLogoFont = CreateFont(
+		100,					// Устанавливает высоту шрифта или символа
+		0,						// Устанавливает среднюю ширину символов в шрифте
+		0,						// Устанавливает угол, между вектором наклона и осью X устройства
+		0,						// Устанавливает угол, между основной линией каждого символа и осью X устройства
+		100,					// Устанавливает толщину шрифта в диапазоне от 0 до 1000
+		0,						// Устанавливает курсивный шрифт
+		0,						// Устанавливает подчеркнутый шрифт
+		0,						// Устанавливает зачеркнутый шрифт
+		RUSSIAN_CHARSET,		// Устанавливает набор символов
+		0,						// Устанавливает точность вывода
+		0,						// Устанавливает точность отсечения
+		0,						// Устанавливает качество вывода
+		0,						// Устанавливает ширину символов и семейство шрифта
+		L"Comic Sans MS"		// устанавливает название шрифта
+	);
+
+	_hScoreFont = CreateFont(
+		40,					// Устанавливает высоту шрифта или символа
+		0,						// Устанавливает среднюю ширину символов в шрифте
+		0,						// Устанавливает угол, между вектором наклона и осью X устройства
+		0,						// Устанавливает угол, между основной линией каждого символа и осью X устройства
+		100,					// Устанавливает толщину шрифта в диапазоне от 0 до 1000
+		0,						// Устанавливает курсивный шрифт
+		0,						// Устанавливает подчеркнутый шрифт
+		0,						// Устанавливает зачеркнутый шрифт
+		RUSSIAN_CHARSET,		// Устанавливает набор символов
+		0,						// Устанавливает точность вывода
+		0,						// Устанавливает точность отсечения
+		0,						// Устанавливает качество вывода
+		0,						// Устанавливает ширину символов и семейство шрифта
+		L"Comic Sans MS"		// устанавливает название шрифта
+	);
+
+
+
+	_need_spawn_new_food = true;
+	_is_running = false;
 
 	_gameInfo = gameInfo;
 	_snake = NULL;
 	_food = NULL;
 
-	score = 0;
+	_score = 0;
 }
 
 
 Game::~Game()
 {
-	Destroy();
+	Uninitialization();
+
+	if (_hGridPen)
+	{
+		DeletePen(_hGridPen);
+		_hGridPen = NULL;
+	}
+
+	if (_hLogoFont)
+	{
+		DeleteFont(_hLogoFont);
+		_hLogoFont = NULL;
+	}
+
+	if (_hScoreFont)
+	{
+		DeleteFont(_hScoreFont);
+		_hScoreFont = NULL;
+	}
 }
 
 
-void Game::Destroy()
+void Game::Uninitialization()
 {
 	if (_snake) { delete _snake; _snake = NULL; }
 	if (_food) { delete _food; _food = NULL; }
@@ -33,7 +89,7 @@ void Game::Destroy()
 
 void Game::Initialization()
 {
-	Destroy();
+	Uninitialization();
 
 	this->_food = new Food();
 	this->_snake = new Snake(Settings::SNAKE_START_POSITION, Settings::SNAKE_STEP_TIME, Settings::SNAKE_START_ROTATION);
@@ -41,12 +97,15 @@ void Game::Initialization()
 
 void Game::Update(DWORD deltaTime)
 {
-	if (is_running)
+	if (_is_running)
 	{
-		this->_food->Update(_gameInfo, need_spawn_new_food);
-		need_spawn_new_food = false;
+		if (!_is_game_over)
+		{
+			this->_food->Update(_gameInfo, _need_spawn_new_food);
+			_need_spawn_new_food = false;
 
-		this->_snake->Update(_gameInfo, deltaTime, _food);
+			this->_snake->Update(_gameInfo, deltaTime, _food);
+		}
 	}
 }
 
@@ -54,9 +113,9 @@ void Game::Draw()
 {
 	Clear();
 	
-	if (is_running)
+	if (_is_running)
 	{
-		if (is_game_over)
+		if (_is_game_over)
 		{
 			DrawGameOverLogo();
 			DrawScore();
@@ -65,7 +124,7 @@ void Game::Draw()
 		{
 			_food->Draw(_gameInfo);
 			_snake->Draw(_gameInfo);
-			DrawCells();
+			DrawGrid();
 			DrawScore();
 		}
 	}
@@ -103,11 +162,11 @@ void Game::ProcessMessages(WPARAM wParam, LPARAM lParam)
 		break;
 	}
 	case ID_GAME_OVER:
-		is_game_over = true;
+		_is_game_over = true;
 		break;
 	case ID_FOOD_ATE:
-		need_spawn_new_food = true;
-		score++;
+		_need_spawn_new_food = true;
+		_score++;
 	break;
 	}
 }
@@ -135,16 +194,16 @@ void Game::Input_KeyDown(WPARAM wParam, LPARAM lParam)
 
 void Game::Start()
 {
-	is_game_over = false;
-	is_running = true;
-	need_spawn_new_food = true;
-	score = 0;
+	_is_game_over = false;
+	_is_running = true;
+	_need_spawn_new_food = true;
+	_score = 0;
 	Initialization();
 }
 
 void Game::Stop()
 {
-	is_running = false;
+	_is_running = false;
 }
 
 
@@ -154,10 +213,9 @@ void Game::Clear()
 	PatBlt(_gameInfo->hdc, 0, 0, _gameInfo->nMaxXScreen, _gameInfo->nMaxYScreen, PATCOPY);
 }
 
-void Game::DrawCells()
+void Game::DrawGrid()
 {
-	HPEN hRedPen = CreatePen(PS_SOLID, 1, RGB(255, 0, 0));
-	HGDIOBJ prevPen = SelectObject(_gameInfo->hdc, hRedPen);
+	HGDIOBJ prevPen = SelectObject(_gameInfo->hdc, _hGridPen);
 
 	int margin_width = _gameInfo->margin_width;
 	int margin_height_top = _gameInfo->margin_height_top;
@@ -188,33 +246,14 @@ void Game::DrawCells()
 
 void Game::DrawLogo()
 {
-	int height = 100;
-
-	HFONT font = CreateFont(
-		height,					// Устанавливает высоту шрифта или символа
-		0,						// Устанавливает среднюю ширину символов в шрифте
-		0,						// Устанавливает угол, между вектором наклона и осью X устройства
-		0,						// Устанавливает угол, между основной линией каждого символа и осью X устройства
-		100,					// Устанавливает толщину шрифта в диапазоне от 0 до 1000
-		0,						// Устанавливает курсивный шрифт
-		0,						// Устанавливает подчеркнутый шрифт
-		0,						// Устанавливает зачеркнутый шрифт
-		RUSSIAN_CHARSET,		// Устанавливает набор символов
-		0,						// Устанавливает точность вывода
-		0,						// Устанавливает точность отсечения
-		0,						// Устанавливает качество вывода
-		0,						// Устанавливает ширину символов и семейство шрифта
-		L"Comic Sans MS"		// устанавливает название шрифта
-	);
-
 	UINT prevAlignText = SetTextAlign(_gameInfo->hdc, VTA_CENTER);
 
-	HGDIOBJ defaultFont = SelectObject(_gameInfo->hdc, font);
+	HGDIOBJ defaultFont = SelectObject(_gameInfo->hdc, _hLogoFont);
 	TCHAR text[256];
 	swprintf_s(text, 256, L"Snake");
 
 	int x = _gameInfo->rect_width / 2;
-	int y = _gameInfo->rect_height / 2 - height;
+	int y = _gameInfo->rect_height / 2 - 100;
 
 	TextOut(_gameInfo->hdc, x, y, text, wcslen(text));
 
@@ -222,36 +261,18 @@ void Game::DrawLogo()
 	SelectObject(_gameInfo->hdc, defaultFont);
 }
 
+
 void Game::DrawGameOverLogo()
 {
-	int height = 100;
-
-	HFONT font = CreateFont(
-		height,					// Устанавливает высоту шрифта или символа
-		0,						// Устанавливает среднюю ширину символов в шрифте
-		0,						// Устанавливает угол, между вектором наклона и осью X устройства
-		0,						// Устанавливает угол, между основной линией каждого символа и осью X устройства
-		100,					// Устанавливает толщину шрифта в диапазоне от 0 до 1000
-		0,						// Устанавливает курсивный шрифт
-		0,						// Устанавливает подчеркнутый шрифт
-		0,						// Устанавливает зачеркнутый шрифт
-		RUSSIAN_CHARSET,		// Устанавливает набор символов
-		0,						// Устанавливает точность вывода
-		0,						// Устанавливает точность отсечения
-		0,						// Устанавливает качество вывода
-		0,						// Устанавливает ширину символов и семейство шрифта
-		L"Comic Sans MS"		// устанавливает название шрифта
-	);
-
 	UINT prevAlignText = SetTextAlign(_gameInfo->hdc, VTA_CENTER);
 	COLORREF prevColor = SetTextColor(_gameInfo->hdc, RGB(255, 0, 0));
 
-	HGDIOBJ defaultFont = SelectObject(_gameInfo->hdc, font);
+	HGDIOBJ defaultFont = SelectObject(_gameInfo->hdc, _hLogoFont);
 	TCHAR text[256];
 	swprintf_s(text, 256, L"Game Over");
 
 	int x = _gameInfo->rect_width / 2;
-	int y = _gameInfo->rect_height / 2 - height;
+	int y = _gameInfo->rect_height / 2 - 100;
 
 	TextOut(_gameInfo->hdc, x, y, text, wcslen(text));
 
@@ -260,32 +281,14 @@ void Game::DrawGameOverLogo()
 	SelectObject(_gameInfo->hdc, defaultFont);
 }
 
+
 void Game::DrawScore()
 {
-	int height = 40;
-
-	HFONT font = CreateFont(
-		height,					// Устанавливает высоту шрифта или символа
-		0,						// Устанавливает среднюю ширину символов в шрифте
-		0,						// Устанавливает угол, между вектором наклона и осью X устройства
-		0,						// Устанавливает угол, между основной линией каждого символа и осью X устройства
-		100,					// Устанавливает толщину шрифта в диапазоне от 0 до 1000
-		0,						// Устанавливает курсивный шрифт
-		0,						// Устанавливает подчеркнутый шрифт
-		0,						// Устанавливает зачеркнутый шрифт
-		RUSSIAN_CHARSET,		// Устанавливает набор символов
-		0,						// Устанавливает точность вывода
-		0,						// Устанавливает точность отсечения
-		0,						// Устанавливает качество вывода
-		0,						// Устанавливает ширину символов и семейство шрифта
-		L"Comic Sans MS"		// устанавливает название шрифта
-	);
-
 	UINT prevAlignText = SetTextAlign(_gameInfo->hdc, VTA_CENTER);
+	HGDIOBJ defaultFont = SelectObject(_gameInfo->hdc, _hScoreFont);
 
-	HGDIOBJ defaultFont = SelectObject(_gameInfo->hdc, font);
 	TCHAR text[256];
-	swprintf_s(text, 256, L"Score : %d", score);
+	swprintf_s(text, 256, L"Score : %d", _score);
 
 	int x = _gameInfo->rect_width / 2;
 	int y = 10;

@@ -12,6 +12,7 @@ private:
 	Rotation _nextRotation;				// Поворот змейки на следующем шаге
 	Rotation _currentRotation;			// Текущий поворот змейки
 	COLORREF _color;					// Цвет змейки
+	HBRUSH _hBrush;						// Кисть для рисования змейки
 	float _stepTime;					// Количество времени, потраченное на один шаг (в секунду)
 	float _nextStepTime;				// Временная переменная, для накопления времени до следующего шага
 

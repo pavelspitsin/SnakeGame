@@ -7,6 +7,8 @@ class Food
 private:
 	Position _position;			// Позиция еды
 	COLORREF _color;			// Цвет еды
+	HPEN _hPen;					// Перо
+	HBRUSH _hBrush;				// Кисть
 
 public:
 	Food();
