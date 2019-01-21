@@ -9,7 +9,6 @@ class Game
 private:
 	Snake* _snake;
 	Food * _food;
-	Rotation _snakeRotation;
 
 	HPEN _hGridPen;
 	HFONT _hLogoFont;

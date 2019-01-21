@@ -18,7 +18,6 @@ bool is_running = true;
 GameInfo* gameInfo;
 
 
-void Clear();
 void GameStart();
 void GameStop();
 void Input_KeyDown(WPARAM wParam, LPARAM lParam);
@@ -255,13 +254,6 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
     return 0;
 }
 
-
-
-void Clear()
-{
-	SelectObject(gameInfo->hdc, GetStockObject(DC_BRUSH));
-	PatBlt(gameInfo->hdc, 0, 0, gameInfo->nMaxXScreen, gameInfo->nMaxYScreen, PATCOPY);
-}
 
 void GameStart()
 {
